@@ -1,2 +1,2 @@
-# FDCSV
-Force Directed Data Explorer for CSV files
+# F.R.M.D. 
+Force Directed Representation of Multivariate Data

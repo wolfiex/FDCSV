@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-contour.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="functions.js"></script>
+<script src="colours.js"></script>
+<script src="save.js"></script>
+<script src="gmm.js"></script>
+
+
+<style>
+    text,
+    p,
+    h5 {
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    .scrollable {
+        height: 100px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        background: rgba(255, 255, 255, .6);
+    }
+
+    checkbox {
+        display: inline;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow-y: scroll;
+        overflow-x: scroll;
+    }
+
+    .nav-group,.sidebar{
+        //width:9%;
+        margin: -1000 !important;
+        padding: 0 0 0 0 0 !important;
+        border: 0!important;
+        display:block !important;
+    }
+
+    #dropzone {
+        background-color: white;
+        position: relative;
+        border: 3px dashed grey; //border-radius: 10px;
+        color: #222;
+        font: bold 10px/20px arial;
+        height: 25px;
+        margin: 3px auto;
+        text-align: center;
+        width: 90%;
+    }
+
+    #dropzone.hover {
+        border: 2px dashed steelblue;
+        color: #222;
+    }
+
+    #dropzone.dropped {
+        background: white;
+        border: 10px solid #444;
+    }
+
+
+    #dropzone [type="file"] {
+        cursor: pointer;
+        position: absolute;
+        opacity: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+
+
+    range,input[type=range]::-webkit-slider-thumb {
+        //display:block;
+        //-webkit-appearance: none;
+        border: none!important;
+        height: 11px!important;
+        width: 6px!important;
+        opacity:1!important;
+        border-radius: 16%!important;
+        //background: #222!important;
+
+        margin-top: 4px!important;
+
+    }
+
+
+
+
+
+</style>
+<!-- Stylesheets -->
+<link rel="stylesheet" href="./photonkit/css/photon.css">
+<link rel="stylesheet" href="./range.css">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+<div class="window">
+    <div class="window-content">
+        <div class="pane-group">
+            <div class="pane-sm sidebar">
+
+
+                <nav class="nav-group" style='width:100%'>
+                    <h5 class="nav-group-title">Import New</h5>
+
+                    <div id="dropzone" onmouseover='document.getElementById("dropzone").classList.add("hover"); document.getElementById("filename").style.display="none"; document.getElementById("uploadlab").style.display="block"' onmouseout='document.getElementById("dropzone").classList.remove("hover");document.getElementById("filename").style.display="block"; document.getElementById("uploadlab").style.display="none"'>
+                        <input type="file" accept="csv" onchange="newfile(document.querySelector('input[type=file]').files[0].path)" />
+                        <div id='filename'>dropzone</div>
+                        <div id='uploadlab' style='display:none;'>Drag File Here / Click</div>
+                    </div>
+
+
+                    <hr size="-100px"></hr>
+
+                    <h5 class="nav-group-title" style="display:inline">Information</h5>
+
+
+
+                    <span class="nav-group-item" onclick='showcsv()'>
+                        <span class="icon icon-folder"></span>
+                        View Data
+                    </span>
+
+                    <h5 class="nav-group-title">Controls</h5>
+
+                    <span class="nav-group-item">
+                        <div class="checkbox" >
+                            <label style='display:block'>
+                                <input type="checkbox" id="collide" checked="True" onchange='setTimeout(run(),100)'>collision detection<br>
+                            </label>
+                            <label style='display:block'>
+                                <input type="checkbox" id="linkscheck" checked="False" onchange='setTimeout(run(),100)'> show links
+                            </label>
+                        </div>
+                    </span>
+
+
+
+
+                    <h5 class="nav-group-title">Other Dimentions</h5>
+                    <span class="nav-group-item">
+
+                        <p style='display:inline;font: 11px arial;'>Size:
+                            <select class="form-control" id='sizes' style="width:70%;display:inline:right=0px;float:right;", onchange='window.sizevar=document.getElementById("sizes").value;setTimeout(run(),100)'></select>
+                        </p>
+
+                        <br>
+
+                        <p style='display:inline;font: 11px arial;'>Colour:
+                            <select class="form-control" id='colours' style="width:70%;display:inline:right=0px;position:relative;float:right;" onchange='window.colvar=document.getElementById("colours").value;'></select>
+                        </p>
+
+                    </span>
+                    <h5 class="nav-group-title">Columns (scrollable)</h5>
+
+                    <span class="nav-group-item" style="pointer-events: none;">
+
+                        <div class='scrollable checkbox' style="pointer-events: all;">
+                            <label id="columncheck"> </label>
+                        </div>
+
+                    </span>
+
+
+
+                    <h5 class="nav-group-title">Adjustment</h5>
+                        <span class="nav-group-item" style='display:block'>
+
+
+                            <label style=";width:48%;">Length Multiply
+                            <input type="range" class="slider slider-round blue slider-small" min="0.001" max="500"  style="display:block;width:98%;"  id="multiplier" value="50" onchange='setTimeout(run(),100)'/>
+
+                            </label>
+
+                            <label style=";width:48%;">Node Size
+                            <input type="range" class="slider slider-round blue slider-small" min="0.1" max="100" style="display:block;width: 98%;" id="size" value="35" onchange='setTimeout(run(),100)'/>
+
+                            </label>
+
+                        </span>
+
+
+                    <h5 class="nav-group-title">Clustering</h5>
+
+                    <span class="nav-group-item">
+
+                                            <hr size="-100px"></hr>
+
+                        <table class="table-striped" style="width:100%">
+
+                          <tr>
+
+                              <th>Clusters</th>
+                            <th style='display:block'>  <input style='' type="number" name="quantity" min="1" max="500" value=undefined id='nclust' </th>
+
+                          </tr>
+                          <th>Iterations</th>
+                          <th style='display:block'><input style='' type="number" name="quantity" min="1" max="100" value=undefined id='niter'></th>
+
+                        </table>
+
+
+                                            <hr size="-100px"></hr>
+
+
+                        <button class="btn btn-mini btn-warning" style='width:48%float:left' onclick='clust(mech="kmean")'>K-Means</button>
+
+                        <button class="btn btn-mini btn-positive" style="width:48%;float:right;" onclick='contour()'>Density</button>
+                        <br>
+                        <button class="btn btn-mini btn-negative" style='width:100%' onclick='clust(mech="gmm")'>Gaussian Mixed Modelling</button>
+
+
+
+                    </span>
+
+
+
+
+
+                    </nav>
+
+
+
+
+                </div>
+                <div id='putsvghere'class="pane">
+                </div>
+                <div id='csvtablediv' style='display:block;width:100%;height:100%;overflow-y: scroll;overflow-x:scroll;' class=''>
+                    <h2> CSV data overview </h2> <h6> Select columns from left pane to begin. </h6> <br>
+
+                    <table class="table-striped" id='csvtable'>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+        <footer class="toolbar toolbar-footer">
+            <div class="toolbar-actions">
+                <button class="btn btn-default">
+                    Cancel
+                </button>
+
+                <button class="btn btn-default">
+                    Read-ME
+                </button>
+
+                <button class="btn btn-primary pull-right" onclick='notify()'>
+                    Save Cluster
+                </button>
+
+                <button class="btn btn-primary pull-right" onclick='savesvg()'>
+                    Save SVG
+                </button>
+
+
+
+            </div>
+        </footer>
+    </div>
+
+
+
+
+    <script src='index.js'>
+
+    </script>
