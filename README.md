@@ -28,6 +28,7 @@ We may wish to see what teh values imported should be. We can do this by clickin
 ### Finally we can select node size and colour columns from the drop down menu
 
 ### Optional Extras
+- No-Overlap (collision detection)
 - Show / Hide links
 - Scale link length
 - K-means clustering colouring
