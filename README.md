@@ -1,6 +1,9 @@
 # F.R.M.D. 
 Force Directed Representation of Multivariate Data
 
+### Cite: <image src='https://zenodo.org/badge/229162791.svg'/> 
+
+
 ## Install 
 1. Install npm (nodejs)
 2. `npm install`
